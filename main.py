@@ -5,19 +5,25 @@ import math
 import os
 
 # --- STYLE CONFIGURATION ---
-BG_COLOR = "#0d0d0d"       
-ACCENT_GREEN = "#00ff41"    
-ACCENT_RED = "#ff3333"      
-BTN_BG = "#1a1a1a"          
-TEXT_COLOR = "#e0e0e0"      
+# Defines the visual theme for the "Cyber-Security" interface
+BG_COLOR = "#0d0d0d"       # Background: Deep Black
+ACCENT_GREEN = "#00ff41"    # Primary: Terminal Green
+ACCENT_RED = "#ff3333"      # Alert: Warning Red
+BTN_BG = "#1a1a1a"          # UI Elements: Dark Grey
+TEXT_COLOR = "#e0e0e0"      # Font: Off-white
 
 class RSAVaultFinal:
+    """
+    Main Application Class for the RSA Vault Game.
+    Handles the cryptographic logic and the landscape-oriented UI.
+    """
     def __init__(self, root):
         self.root = root
         self.root.title("RSA MISSION CONTROL v2.0")
         self.root.geometry("1100x650")
         self.root.configure(bg=BG_COLOR)
         
+        # State Variables: Storage for keys, time, and agent data
         self.agent_name = "Unknown Agent"
         self.p = self.q = self.n = self.phi = self.e = self.d = 0
         self.time_elapsed = 0
@@ -27,10 +33,12 @@ class RSAVaultFinal:
         self.setup_welcome_screen()
 
     def clear_screen(self):
+        """Removes all widgets from the current window to prepare for the next stage."""
         for widget in self.root.winfo_children():
             widget.destroy()
 
     def styled_button(self, parent, text, command, color=ACCENT_GREEN, width=20):
+        """Creates a custom-themed button with hover effects for consistent UI."""
         btn = tk.Button(parent, text=text, command=command, 
                         bg=BTN_BG, fg=color, activebackground=color, 
                         activeforeground=BG_COLOR, font=("Courier New", 11, "bold"),
@@ -40,8 +48,13 @@ class RSAVaultFinal:
         return btn
 
     def create_layout(self, stage_name, instruction):
+        """
+        Creates the 'Mission Control' landscape layout.
+        Splits screen into an Info Panel (Left) and a Workspace (Right).
+        """
         self.clear_screen()
-        # LEFT PANEL: System Status
+        
+        # LEFT PANEL: Displays current Agent ID, Timer, and Instructions
         self.left_panel = tk.Frame(self.root, bg=BTN_BG, width=350)
         self.left_panel.pack(side="left", fill="y")
         self.left_panel.pack_propagate(False)
@@ -62,11 +75,14 @@ class RSAVaultFinal:
         self.styled_button(self.left_panel, "ABORT MISSION", self.setup_welcome_screen, 
                            color=ACCENT_RED, width=15).pack(side="bottom", pady=30)
 
-        # RIGHT PANEL: Workspace
+        # RIGHT PANEL: Area for user input and game interaction
         self.workspace = tk.Frame(self.root, bg=BG_COLOR)
         self.workspace.pack(side="right", expand=True, fill="both")
 
+    # --- GAME STAGES ---
+
     def setup_welcome_screen(self):
+        """Initial Landing Screen."""
         self.timer_running = False
         self.clear_screen()
         main_frame = tk.Frame(self.root, bg=BG_COLOR)
@@ -83,7 +99,7 @@ class RSAVaultFinal:
         self.styled_button(btn_row, "LEADERBOARD", self.show_leaderboard, color="#ffff00").pack(side="left", padx=10)
 
     def agent_id_screen(self):
-        """New UI for Agent Name Entry"""
+        """Step 0: Identity Verification. The player sets their Agent Name for the mission."""
         self.clear_screen()
         cont = tk.Frame(self.root, bg=BG_COLOR)
         cont.place(relx=0.5, rely=0.5, anchor="center")
@@ -91,16 +107,15 @@ class RSAVaultFinal:
         tk.Label(cont, text="I D E N T I T Y   V E R I F I C A T I O N", fg=ACCENT_GREEN, 
                  bg=BG_COLOR, font=("Courier New", 18, "bold")).pack(pady=20)
         
-        tk.Label(cont, text="ENTER AGENT ID:", fg="#888888", bg=BG_COLOR, font=("Courier New", 12)).pack()
-        
         self.name_entry = tk.Entry(cont, font=("Courier New", 20), bg=BTN_BG, fg=ACCENT_GREEN, 
-                                  justify="center", insertbackground=ACCENT_GREEN, relief="flat", width=20)
+                                  justify="center", relief="flat", width=20)
         self.name_entry.pack(pady=20, ipady=5)
         self.name_entry.focus_set()
 
         self.styled_button(cont, "AUTHORIZE ACCESS", self.process_agent_id).pack(pady=10)
 
     def process_agent_id(self):
+        """Validates the Agent ID before proceeding to difficulty selection."""
         name = self.name_entry.get().strip()
         if name:
             self.agent_name = name
@@ -109,6 +124,7 @@ class RSAVaultFinal:
             messagebox.showwarning("IDENTITY ERROR", "Agent ID cannot be empty.")
 
     def difficulty_selection(self):
+        """Allows selection of prime ranges, determining encryption complexity."""
         self.create_layout("DIFFICULTY", f"Agent {self.agent_name}, select the bit-strength for this mission.")
         cont = tk.Frame(self.workspace, bg=BG_COLOR)
         cont.place(relx=0.5, rely=0.5, anchor="center")
@@ -118,6 +134,7 @@ class RSAVaultFinal:
             self.styled_button(cont, lvl, lambda l=lvl, r=s: self.start_game(l, r)).pack(pady=10)
 
     def start_game(self, level, r):
+        """Initializes the mission timer and starts Stage 1."""
         self.difficulty = level
         self.current_range = r
         self.time_elapsed = 0
@@ -126,6 +143,7 @@ class RSAVaultFinal:
         self.stage_1_prime_input()
 
     def stage_1_prime_input(self):
+        """Stage 1: Prime Input. RSA requires two prime numbers (p and q)."""
         self.create_layout("STAGE_01", "Input or generate two distinct primes p and q.")
         input_cont = tk.Frame(self.workspace, bg=BG_COLOR)
         input_cont.place(relx=0.5, rely=0.5, anchor="center")
@@ -142,6 +160,7 @@ class RSAVaultFinal:
         self.styled_button(input_cont, "VALIDATE", self.validate_primes_input, width=25).grid(row=3, column=0, columnspan=2)
 
     def validate_primes_input(self):
+        """Checks if user inputs are valid integers and prime numbers."""
         try:
             p_val, q_val = int(self.p_entry.get()), int(self.q_entry.get())
             if p_val != q_val and self.is_prime(p_val) and self.is_prime(q_val):
@@ -153,21 +172,29 @@ class RSAVaultFinal:
             messagebox.showerror("ERROR", "Integer inputs required.")
 
     def auto_gen_primes(self):
+        """Randomly picks valid primes from the difficulty range."""
         primes = [n for n in range(self.current_range[0], self.current_range[1]) if self.is_prime(n)]
         p, q = random.sample(primes, 2)
         self.p_entry.delete(0, tk.END); self.p_entry.insert(0, str(p))
         self.q_entry.delete(0, tk.END); self.q_entry.insert(0, str(q))
 
     def stage_2_keygen(self):
+        """
+        Stage 2: Key Generation.
+        Calculates Modulus (n) and Totient (phi).
+        Asks player to select Public Exponent (e).
+        """
         self.n, self.phi = self.p * self.q, (self.p - 1) * (self.q - 1)
+        # Find e such that gcd(e, phi) == 1 (Coprimes)
         e_opts = [e for e in range(3, self.phi) if math.gcd(e, self.phi) == 1][:5]
-        self.create_layout("STAGE_02: KEYGEN", f"n: {self.n}\nφ: {self.phi}")
+        self.create_layout("STAGE_02: KEYGEN", f"Modulus (n): {self.n}\nTotient (φ): {self.phi}")
         btn_cont = tk.Frame(self.workspace, bg=BG_COLOR)
         btn_cont.place(relx=0.5, rely=0.5, anchor="center")
         for val in e_opts:
             self.styled_button(btn_cont, f"e = {val}", lambda v=val: self.calc_d(v), width=15).pack(pady=5)
 
     def calc_d(self, chosen_e):
+        """Calculates the Private Key (d) using Modular Inverse."""
         self.e = chosen_e
         self.d = pow(self.e, -1, self.phi)
         self.create_layout("STAGE_02: SECURED", "Key derived. Memorize this value.")
@@ -178,7 +205,8 @@ class RSAVaultFinal:
         self.styled_button(cont, "PROCEED", self.stage_3_encrypt).pack(pady=20)
 
     def stage_3_encrypt(self):
-        self.create_layout("STAGE_03", "Input secret message.")
+        """Stage 3: Message Encryption."""
+        self.create_layout("STAGE_03", "Input secret message for encryption.")
         cont = tk.Frame(self.workspace, bg=BG_COLOR)
         cont.place(relx=0.5, rely=0.5, anchor="center")
         self.msg_entry = tk.Entry(cont, font=("Courier New", 18), bg=BTN_BG, fg=ACCENT_GREEN, width=25)
@@ -186,26 +214,30 @@ class RSAVaultFinal:
         self.styled_button(cont, "ENCRYPT", self.encrypt_action).pack()
 
     def encrypt_action(self):
+        """Encrypts each character using formula: C = (M^e) mod n."""
         msg = self.msg_entry.get()
         if not msg: return
         self.encrypted_msg = [pow(ord(c), self.e, self.n) for c in msg]
         self.stage_4_decrypt()
 
     def stage_4_decrypt(self):
-        self.create_layout("STAGE_04", f"CIPHER:\n{self.encrypted_msg}")
+        """Stage 4: Decryption Challenge. Requires Private Key d."""
+        self.create_layout("STAGE_04", f"NUMERIC CIPHER:\n{self.encrypted_msg}")
         cont = tk.Frame(self.workspace, bg=BG_COLOR)
         cont.place(relx=0.5, rely=0.5, anchor="center")
-        tk.Label(cont, text="ENTER PRIVATE KEY (d):", fg=ACCENT_RED, bg=BG_COLOR).pack(pady=10)
+        tk.Label(cont, text="ENTER PRIVATE KEY (d) TO UNLOCK:", fg=ACCENT_RED, bg=BG_COLOR).pack(pady=10)
         self.d_input = tk.Entry(cont, font=("Courier New", 20), bg=BTN_BG, fg=ACCENT_RED, width=15, justify="center")
         self.d_input.pack(pady=10)
-        self.styled_button(cont, "UNLOCK", self.finish_game, color=ACCENT_RED).pack()
+        self.styled_button(cont, "DECRYPT VAULT", self.finish_game, color=ACCENT_RED).pack()
 
     def finish_game(self):
+        """Finalizes the mission if d is correct."""
         try:
             if int(self.d_input.get()) == self.d:
+                # Decrypt using: M = (C^d) mod n
                 decrypted = "".join([chr(pow(c, self.d, self.n)) for c in self.encrypted_msg])
                 self.timer_running = False
-                # Save to leaderboard
+                # Save data to local leaderboard file
                 with open(self.leaderboard_file, "a") as f:
                     f.write(f"{self.agent_name},{self.time_elapsed},{self.difficulty}\n")
                 self.show_access_granted(decrypted)
@@ -214,40 +246,45 @@ class RSAVaultFinal:
         except: pass
 
     def show_access_granted(self, msg):
-        self.create_layout("SUCCESS", "Vault decrypted.")
+        """Displays the mission success screen with decrypted message."""
+        self.create_layout("SUCCESS", "Mission accomplished. Vault decrypted.")
         cont = tk.Frame(self.workspace, bg=BG_COLOR)
         cont.place(relx=0.5, rely=0.5, anchor="center")
         tk.Label(cont, text="A C C E S S   G R A N T E D", fg=ACCENT_GREEN, bg=BG_COLOR, font=("Courier New", 24, "bold")).pack()
         msg_box = tk.Frame(cont, bg=BTN_BG, padx=30, pady=20, highlightthickness=1, highlightbackground=ACCENT_GREEN)
         msg_box.pack(pady=20)
-        tk.Label(msg_box, text=f"MESSAGE: {msg}", fg="white", bg=BTN_BG, font=("Courier New", 14)).pack()
-        self.styled_button(cont, "MAIN TERMINAL", self.setup_welcome_screen).pack()
+        tk.Label(msg_box, text=f"DECRYPTED DATA:\n{msg}", fg="white", bg=BTN_BG, font=("Courier New", 14)).pack()
+        self.styled_button(cont, "RETURN TO MAIN TERMINAL", self.setup_welcome_screen).pack()
 
     def show_leaderboard(self):
+        """Retrieves and displays the top 10 fastest mission completions."""
         self.clear_screen()
-        tk.Label(self.root, text="TOP AGENTS", fg="#ffff00", bg=BG_COLOR, font=("Courier New", 30, "bold")).pack(pady=30)
+        tk.Label(self.root, text="TOP AGENTS (FASTEEST COMPLETIONS)", fg="#ffff00", bg=BG_COLOR, font=("Courier New", 20, "bold")).pack(pady=30)
         list_frame = tk.Frame(self.root, bg=BG_COLOR)
         list_frame.pack(expand=True, fill="both")
 
         if os.path.exists(self.leaderboard_file):
             with open(self.leaderboard_file, "r") as f:
                 lines = [l.strip().split(",") for l in f.readlines() if "," in l]
+                # Sort by time elapsed (lowest is better)
                 scores = sorted(lines, key=lambda x: int(x[1]))[:10]
                 for i, s in enumerate(scores):
                     tk.Label(list_frame, text=f"{i+1}. {s[0]:<15} {s[1]}s | Level: {s[2]}", 
                              fg="white", bg=BG_COLOR, font=("Courier New", 14)).pack()
         else:
-            tk.Label(list_frame, text="NO MISSION DATA FOUND", fg="white", bg=BG_COLOR).pack()
+            tk.Label(list_frame, text="NO MISSION DATA RECORDED", fg="white", bg=BG_COLOR).pack()
 
-        self.styled_button(self.root, "RETURN", self.setup_welcome_screen).pack(pady=40)
+        self.styled_button(self.root, "EXIT TO TERMINAL", self.setup_welcome_screen).pack(pady=40)
 
     def is_prime(self, n):
+        """Helper to check if a number is prime using square root optimization."""
         if n < 2: return False
         for i in range(2, int(math.sqrt(n)) + 1):
             if n % i == 0: return False
         return True
 
     def update_timer(self):
+        """Recursive function to update mission time every second."""
         if self.timer_running:
             self.time_elapsed += 1
             if hasattr(self, 'timer_label'): self.timer_label.config(text=f"SESSION_TIME: {self.time_elapsed}s")
