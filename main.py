@@ -364,6 +364,7 @@ class RSAVaultFinal:
         self.current_stage_index = 0
         self.clear_screen()
 
+        # === MAIN CONTAINER (CENTER) ===
         cont = tk.Frame(self.root, bg=BG_COLOR)
         cont.place(relx=0.5, rely=0.5, anchor="center")
 
@@ -396,6 +397,18 @@ class RSAVaultFinal:
         self.name_entry.focus_set()
 
         self.styled_button(cont, "AUTHORIZE ACCESS", self.process_agent_id).pack(pady=10)
+
+        # ====== NEW: BACK TO HOME BUTTON (BOTTOM LEFT) ======
+        back_btn_frame = tk.Frame(self.root, bg=BG_COLOR)
+        back_btn_frame.place(relx=0.02, rely=0.95, anchor="sw")  # bottom left
+
+        self.styled_button(
+            back_btn_frame,
+            "◀ BACK TO HOME",
+            self.setup_welcome_screen,
+            color=ACCENT_BLUE,
+            width=18
+        ).pack()
 
     def process_agent_id(self):
         name = self.name_entry.get().strip()
@@ -802,29 +815,46 @@ class RSAVaultFinal:
         header.pack(pady=20)
 
         table_frame = tk.Frame(self.root, bg=BG_COLOR)
-        table_frame.pack(expand=True, fill="both", padx=100)
+        table_frame.pack(expand=True, fill="both", padx=120)
 
+        # ===== TABLE HEADER (PROPER ALIGNMENT) =====
         header_row = tk.Frame(table_frame, bg=HIGHLIGHT)
         header_row.pack(fill="x", pady=5)
 
-        tk.Label(header_row, text="RANK", fg=ACCENT_BLUE, bg=HIGHLIGHT, font=("Courier New", 12, "bold"), width=8).pack(side="left")
-        tk.Label(header_row, text="AGENT NAME", fg=ACCENT_BLUE, bg=HIGHLIGHT, font=("Courier New", 12, "bold"), width=25).pack(side="left")
-        tk.Label(header_row, text="TIME (s)", fg=ACCENT_BLUE, bg=HIGHLIGHT, font=("Courier New", 12, "bold"), width=12).pack(side="left")
-        tk.Label(header_row, text="LEVEL", fg=ACCENT_BLUE, bg=HIGHLIGHT, font=("Courier New", 12, "bold"), width=12).pack(side="left")
+        tk.Label(header_row, text="RANK", fg=ACCENT_BLUE, bg=HIGHLIGHT,
+                font=("Courier New", 12, "bold"), width=8, anchor="center").pack(side="left")
 
+        tk.Label(header_row, text="AGENT NAME", fg=ACCENT_BLUE, bg=HIGHLIGHT,
+                font=("Courier New", 12, "bold"), width=32, anchor="w").pack(side="left")
+
+        tk.Label(header_row, text="TIME TAKEN (s)", fg=ACCENT_BLUE, bg=HIGHLIGHT,
+                font=("Courier New", 12, "bold"), width=18, anchor="center").pack(side="left")
+
+        tk.Label(header_row, text="LEVEL", fg=ACCENT_BLUE, bg=HIGHLIGHT,
+                font=("Courier New", 12, "bold"), width=12, anchor="center").pack(side="left")
+
+        # ===== TABLE CONTENT =====
         if os.path.exists(self.leaderboard_file):
             with open(self.leaderboard_file, "r") as f:
                 lines = [l.strip().split(",") for l in f.readlines() if "," in l]
                 scores = sorted(lines, key=lambda x: int(x[1]))[:10]
 
-                for i, s in enumerate(scores):
-                    row = tk.Frame(table_frame, bg=BTN_BG)
-                    row.pack(fill="x", pady=3)
+            for i, s in enumerate(scores):
+                row = tk.Frame(table_frame, bg=BTN_BG)
+                row.pack(fill="x", pady=3)
 
-                    tk.Label(row, text=f"#{i+1}", fg="white", bg=BTN_BG, font=("Courier New", 12), width=8).pack(side="left")
-                    tk.Label(row, text=s[0], fg="white", bg=BTN_BG, font=("Courier New", 12), width=25, anchor="w").pack(side="left")
-                    tk.Label(row, text=f"{s[1]} s", fg=ACCENT_GREEN, bg=BTN_BG, font=("Courier New", 12), width=12).pack(side="left")
-                    tk.Label(row, text=s[2], fg=ACCENT_YELLOW, bg=BTN_BG, font=("Courier New", 12), width=12).pack(side="left")
+                tk.Label(row, text=f"#{i+1}", fg="white", bg=BTN_BG,
+                        font=("Courier New", 12), width=8, anchor="center").pack(side="left")
+
+                tk.Label(row, text=s[0], fg="white", bg=BTN_BG,
+                        font=("Courier New", 12), width=30, anchor="w").pack(side="left")
+
+                tk.Label(row, text=s[1] + " s", fg=ACCENT_GREEN, bg=BTN_BG,
+                        font=("Courier New", 12), width=18, anchor="center").pack(side="left")
+
+                tk.Label(row, text=s[2], fg=ACCENT_YELLOW, bg=BTN_BG,
+                        font=("Courier New", 12), width=12, anchor="center").pack(side="left")
+
         else:
             tk.Label(
                 table_frame,
@@ -834,7 +864,16 @@ class RSAVaultFinal:
                 font=("Courier New", 12)
             ).pack(pady=30)
 
-        self.styled_button(self.root, "BACK TO MAIN TERMINAL", self.setup_welcome_screen).pack(pady=30)
+        # Back button centered neatly
+        btn_frame = tk.Frame(self.root, bg=BG_COLOR)
+        btn_frame.pack(pady=30)
+
+        self.styled_button(
+            btn_frame,
+            "BACK TO MAIN TERMINAL",
+            self.setup_welcome_screen,
+            width=28
+        ).pack()
 
     # ============================
     # UTILITIES
